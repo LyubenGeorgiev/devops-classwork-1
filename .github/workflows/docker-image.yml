@@ -7,10 +7,20 @@ on:
 jobs:
 
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
+
     - name: Build the Docker image
-      run: docker build --tag flask-test:$(date +%s) ./src/
+      run: |
+        docker build --tag lyubengeorgiev/devops-classwork-1:latest ./src/
+
+    - name: Login to DockerHub
+      run: |
+        echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+    - name: Push to DockerHub
+      run: |
+        docker push lyubengeorgiev/devops-classwork-1:latest
