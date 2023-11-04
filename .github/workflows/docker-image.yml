@@ -4,11 +4,97 @@ on:
   push:
     branches: [ "main" ]
 
+# jobs:
+
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v3
+
+#     - name: Snyk Security Scan
+#       working-directory: ${{github.workspace}}/src
+#       run: |
+#         # Install Dependencies
+#         pip install -r requirements.txt
+
+#         # Install the Snyk CLI
+#         npm install -g snyk
+
+#         # Authenticate with Snyk using your API token or token from secrets
+#         snyk auth ${{ secrets.SNYK_AUTH_TOKEN }}
+
+#         # Run Snyk to scan your project
+#         snyk test
+
+#     - name: SonarCloud Scan
+#       uses: sonarsource/sonarcloud-github-action@master
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+#     - name: Build the Docker image
+#       run: |
+#         docker build --tag lyubengeorgiev/devops-classwork-1:latest ./src/
+
+#     - name: Run Trivy vulnerability scanner
+#       uses: aquasecurity/trivy-action@master
+#       with:
+#         image-ref: 'lyubengeorgiev/devops-classwork-1:latest'
+#         format: 'table'
+#         exit-code: '1'
+#         ignore-unfixed: true
+#         vuln-type: 'os,library'
+#         severity: 'CRITICAL,HIGH'
+
+#     - name: Login to DockerHub
+#       run: |
+#         echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+#     - name: Push to DockerHub
+#       run: |
+#         docker push lyubengeorgiev/devops-classwork-1:latest
+
 jobs:
-
-  build:
+  build_image:
     runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
 
+    # - name: Build the Docker image
+    #   run: |
+    #     docker build --tag lyubengeorgiev/devops-classwork-1:latest ./src/
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and export
+      uses: docker/build-push-action@v5
+      with:
+        context: ./src/
+        tags: lyubengeorgiev/devops-classwork-1:latest
+        outputs: type=docker,dest=/tmp/myimage.tar
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'lyubengeorgiev/devops-classwork-1:latest'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: myimage
+        path: /tmp/myimage.tar
+
+  scan_code:
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -34,19 +120,21 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-    - name: Build the Docker image
-      run: |
-        docker build --tag lyubengeorgiev/devops-classwork-1:latest ./src/
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
+  docker_push:
+    runs-on: ubuntu-latest
+    needs:
+      - build_image
+      - scan_code
+    steps:
+    - name: Download docker image artifact
+      uses: actions/download-artifact@v3
       with:
-        image-ref: 'lyubengeorgiev/devops-classwork-1:latest'
-        format: 'table'
-        exit-code: '1'
-        ignore-unfixed: true
-        vuln-type: 'os,library'
-        severity: 'CRITICAL,HIGH'
+        name: myimage
+        path: /tmp
+
+    - name: Load docker image image
+      run: |
+        docker load --input /tmp/myimage.tar
 
     - name: Login to DockerHub
       run: |
