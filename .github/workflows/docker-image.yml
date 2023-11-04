@@ -30,20 +30,24 @@ jobs:
     #       -Dsonar.organization=<Your_Organization_Key> \
     #       -Dsonar.sources=src
   
-    - name: Snyk Security Scan
-      working-directory: ${{github.workspace}}/src
-      run: |
-        # Install Dependencies
-        pip install -r requirements.txt
+    # - name: Snyk Security Scan
+    #   working-directory: ${{github.workspace}}/src
+    #   run: |
+    #     # Install Dependencies
+    #     pip install -r requirements.txt
 
-        # Install the Snyk CLI
-        npm install -g snyk
+    #     # Install the Snyk CLI
+    #     npm install -g snyk
 
-        # Authenticate with Snyk using your API token or token from secrets
-        snyk auth ${{ secrets.SNYK_AUTH_TOKEN }}
+    #     # Authenticate with Snyk using your API token or token from secrets
+    #     snyk auth ${{ secrets.SNYK_AUTH_TOKEN }}
 
-        # Run Snyk to scan your project
-        snyk test
+    #     # Run Snyk to scan your project
+    #     snyk test
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/python@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_AUTH_TOKEN }}
 
     - name: Login to DockerHub
       run: |
