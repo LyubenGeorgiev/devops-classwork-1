@@ -17,9 +17,6 @@ jobs:
       run: |
         docker build --tag lyubengeorgiev/devops-classwork-1:latest ./src/
 
-    # - name: SonarCloud Scan
-
-  
     # - name: Snyk Security Scan
     #   working-directory: ${{github.workspace}}/src
     #   run: |
@@ -39,7 +36,13 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_AUTH_TOKEN }}
       with:
-        args: ${{github.workspace}}/src
+        args: --all-projects
+
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     - name: Login to DockerHub
       run: |
