@@ -18,17 +18,7 @@ jobs:
         docker build --tag lyubengeorgiev/devops-classwork-1:latest ./src/
 
     # - name: SonarCloud Scan
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   run: |
-    #     # Install SonarScanner
-    #     npm install -g sonarqube-scanner
 
-    #     # Run SonarScanner with your project key and organization
-    #     sonar-scanner \
-    #       -Dsonar.projectKey=<Your_Project_Key> \
-    #       -Dsonar.organization=<Your_Organization_Key> \
-    #       -Dsonar.sources=src
   
     # - name: Snyk Security Scan
     #   working-directory: ${{github.workspace}}/src
@@ -48,6 +38,8 @@ jobs:
       uses: snyk/actions/python@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_AUTH_TOKEN }}
+      with:
+        args: ${{github.workspace}}/src
 
     - name: Login to DockerHub
       run: |
