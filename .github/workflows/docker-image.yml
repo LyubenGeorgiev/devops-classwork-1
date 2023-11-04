@@ -36,7 +36,7 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_AUTH_TOKEN }}
       with:
-        args: --all-projects $GITHUB_WORKSPACE/src
+        args: ${{github.workspace}}/src --all-projects --detection-depth=5
 
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
