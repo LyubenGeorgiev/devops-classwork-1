@@ -5,7 +5,36 @@ on:
     branches: [ "main" ]
 
 jobs:
-  lint:
+  ss:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: | 
+        pip3 install flake8
+        npm install -g editorconfig-checker
+        npm install -g markdownlint-cli
+        
+    - name: Run Flake8
+      working-directory: ${{github.workspace}}/src
+      run: flake8
+
+    - name: Get editorconfig checker
+      uses: editorconfig-checker/action-editorconfig-checker@main
+    - name: Run Editorconfig Checker
+      working-directory: ${{github.workspace}}/src
+      run: editorconfig-checker
+
+    - name: Run markdownlint-cli
+      uses: nosborn/github-action-markdown-cli@v3.3.0
+      with:
+        files: /*.md
+        dot: true
+
+  style:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Python
@@ -13,6 +42,7 @@ jobs:
         with:
           python-version: 3.10.13
           architecture: x64
+
       - name: Install flake8
         run: pip install flake8
       - name: Run flake8
@@ -22,9 +52,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Run Editorconfig Checker
+        working-directory: ${{github.workspace}}/src
+        run: editorconfig-checker
+  
+      - name: Run Markdown check
+        run: markdownlint '**/*.md'
+
   build:
     needs:
-      ["lint"]
+      ["style"]
     runs-on: ubuntu-latest
 
     steps:
