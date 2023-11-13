@@ -19,7 +19,7 @@ jobs:
       - name: flake8 Lint
         uses: py-actions/flake8@v2
 
-      - name: Get editorconfig checker
+      - name: Get Editorconfig Checker
         uses: editorconfig-checker/action-editorconfig-checker@main
       - name: Run Editorconfig Checker
         working-directory: ${{github.workspace}}/src
