@@ -1,10 +1,15 @@
 # The base image
 FROM alpine:latest
 
+RUN addgroup -S nonroot \
+    && adduser -S nonroot -G nonroot
+
 # Install python and pip
 RUN apk update
 RUN apk upgrade
 RUN apk add python3 py3-pip python3-dev
+
+USER nonroot
 
 # Install Python modules needed by the Python app
 COPY src/requirements.txt /usr/src/app/
