@@ -90,35 +90,53 @@ jobs:
       - name: Run Python Unit tests
         run: python3 -m unittest ./tests/app_test.py
 
-  build:
+  snyk:
     needs:
       ["lint", "markdownlint-cli", "markdownlint-cli", "gitleaks", "unit-tests"]
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Snyk Security Scan
+        working-directory: ${{github.workspace}}/src
+        run: |
+          # Install Dependencies
+          pip install -r requirements.txt
+
+          # Install the Snyk CLI
+          npm install -g snyk
+
+          # Authenticate with Snyk using your API token or token from secrets
+          snyk auth ${{ secrets.SNYK_AUTH_TOKEN }}
+
+          # Run Snyk to scan your project
+          snyk test
+
+  sonarcloud:
+    needs:
+      ["lint", "markdownlint-cli", "markdownlint-cli", "gitleaks", "unit-tests"]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  build:
+    needs:
+      ["snyk", "sonarcloud"]
+    runs-on: ubuntu-latest
+
+    steps:
     - name: Checkout code
       uses: actions/checkout@v3
-
-    - name: Snyk Security Scan
-      working-directory: ${{github.workspace}}/src
-      run: |
-        # Install Dependencies
-        pip install -r requirements.txt
-
-        # Install the Snyk CLI
-        npm install -g snyk
-
-        # Authenticate with Snyk using your API token or token from secrets
-        snyk auth ${{ secrets.SNYK_AUTH_TOKEN }}
-
-        # Run Snyk to scan your project
-        snyk test
-
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     - name: Build the Docker image
       run: |
