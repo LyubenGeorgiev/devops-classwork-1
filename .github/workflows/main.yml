@@ -1,11 +1,11 @@
-name: Docker Image CI
+name: Main CI
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  style:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,17 +19,57 @@ jobs:
       - name: flake8 Lint
         uses: py-actions/flake8@v2
 
+  editorconfig-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
       - name: Get Editorconfig Checker
         uses: editorconfig-checker/action-editorconfig-checker@main
       - name: Run Editorconfig Checker
         working-directory: ${{github.workspace}}/src
         run: editorconfig-checker
-  
+
+      
+
+  markdownlint-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
       - name: Run markdownlint-cli
         uses: nosborn/github-action-markdown-cli@v3.3.0
         with:
           files: /*.md
           dot: true
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   unit-tests:
     runs-on: ubuntu-latest
@@ -49,15 +89,10 @@ jobs:
           
       - name: Run Python Unit tests
         run: python3 -m unittest ./tests/app_test.py
-      
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build:
     needs:
-      ["style", "unit-tests"]
+      ["lint", "markdownlint-cli", "markdownlint-cli", "gitleaks", "unit-tests"]
     runs-on: ubuntu-latest
 
     steps:
