@@ -1,0 +1,1 @@
+insert into PRODUCT (ID, NAME) values (3, 'Shampoo');
